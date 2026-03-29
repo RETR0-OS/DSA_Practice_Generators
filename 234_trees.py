@@ -356,14 +356,20 @@ def _delete_recursive(node, key, steps):
             node.keys.remove(key)
             steps.append(f"  delete {key} from leaf → {node.keys}")
         else:
-            # Replace with in-order successor
+            # Internal node: ensure right child can accept a deletion first
+            ci = ki + 1
+            ci = _ensure_not_minimum(node, ci, steps)
+            # After restructuring, ki may have shifted if a fuse consumed it
+            if key not in node.keys:
+                # key was pulled into the fused child — recurse there
+                _delete_recursive(node.children[ci], key, steps)
+                return
+            ki = node.keys.index(key)
+            # Now find the in-order successor in the (possibly restructured) subtree
             succ = _find_min_leaf(node.children[ki + 1])
             steps.append(f"  {key} is internal — replace with in-order successor {succ}")
             node.keys[ki] = succ
-            # Now delete the successor from the right subtree
-            ci = ki + 1
-            ci = _ensure_not_minimum(node, ci, steps)
-            _delete_recursive(node.children[ci], succ, steps)
+            _delete_recursive(node.children[ki + 1], succ, steps)
     else:
         # Key not here — descend
         ci = 0
@@ -389,10 +395,14 @@ def delete_234(root, key):
     steps.append(f"  deleting {key} from tree")
     _delete_recursive(root, key, steps)
 
-    # If root is now empty (had only 1 key and was fused), shrink tree
-    if not root.is_leaf() and root.num_keys() == 0:
-        root = root.children[0]
-        steps.append("  root emptied — child becomes new root")
+    # If root is now empty, shrink or remove
+    if root.num_keys() == 0:
+        if root.is_leaf():
+            root = None
+            steps.append("  root emptied — tree is now empty")
+        else:
+            root = root.children[0]
+            steps.append("  root emptied — child becomes new root")
 
     return root, steps
 
@@ -557,7 +567,7 @@ def _rb_display_aux(node):
     Returns (lines, width, root_offset).
     """
     if node is None:
-        return [], 0, 0
+        return [], 0, 0, 0
 
     label = f"[{node.key}]"
     w     = len(label)
@@ -603,7 +613,8 @@ def _rb_display_aux(node):
     # Both children
     left_lines,  lw, lh, lx = _rb_display_aux(node.left)
     right_lines, rw, rh, rx = _rb_display_aux(node.right)
-    le, re = edge_chars(node.left.color)
+    le, _ = edge_chars(node.left.color)
+    _, re  = edge_chars(node.right.color)
     lew, rew = len(le), len(re)
 
     first  = (' ' * (lx + lew)
@@ -631,11 +642,7 @@ def pretty_print_rb(root, indent=2):
     if root is None:
         print(' ' * indent + '(empty tree)')
         return
-    result = _rb_display_aux(root)
-    if len(result) == 3:
-        lines, _, _ = result
-    else:
-        lines, _, _, _ = result
+    lines, _, _, _ = _rb_display_aux(root)
     for line in lines:
         print(' ' * indent + line)
     print()
@@ -719,9 +726,9 @@ def random_invalid_234(rng, n):
             return random_invalid_234(rng, n)
         target = rng.choice(leaves)
         dummy_key = rng.choice([k for k in range(1, 150) if k not in target.keys])
-        target.children.append(Node234([dummy_key]))
-        if target.num_keys() == 1:
-            target.children.append(Node234([dummy_key + 1]))
+        # Add exactly num_keys+1 children so only the depth property is violated
+        for i in range(target.num_keys() + 1):
+            target.children.append(Node234([dummy_key + i]))
         return root, (f"Node {target.keys}: is a leaf at one depth but has a child, "
                       f"violating the equal-leaf-depth property")
 

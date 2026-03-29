@@ -170,7 +170,7 @@ def _display_aux(node):
     elif rh < lh:
         right_lines += [' ' * rw] * (lh - rh)
 
-    middle = [l + ' ' * (gap) + r for l, r in zip(left_lines, right_lines)]
+    middle = [l + ' ' * w + r for l, r in zip(left_lines, right_lines)]
     lines  = [first, second] + middle
     return lines, lw + w + rw, len(lines), lw + w // 2
 
@@ -284,9 +284,9 @@ def random_invalid_bst(rng, n):
 
     # Fallback: force an obvious violation on root's left child
     if root.left is not None:
-        root.left.val = root.val + rng.randint(1, 10)
+        root.left.val = min(root.val + rng.randint(1, 10), 99)
     else:
-        root.right = Node(root.val - rng.randint(1, 10))
+        root.right = Node(max(root.val - rng.randint(1, 10), 1))
     return root
 
 
@@ -345,8 +345,9 @@ def q_two_traversals_to_bst(rng):
             ans_root = build_from_preorder_inorder(t2, t1)
         elif name1 == "Inorder" and name2 == "Postorder":
             ans_root = build_from_postorder_inorder(t2, t1)
-        else:  # Preorder + Postorder
-            ans_root = build_from_preorder_postorder(t1, t2)
+        else:  # Preorder + Postorder — derive inorder via BST property
+            inord_derived = sorted(t1)
+            ans_root = build_from_preorder_inorder(t1, inord_derived)
         pretty_print_bst(ans_root)
         print()
 
