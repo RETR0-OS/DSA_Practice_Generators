@@ -341,7 +341,10 @@ def q_two_traversals_to_bst(rng):
         ("Inorder",   "Postorder", inorder(root),   postorder(root)),
         ("Preorder",  "Postorder", preorder(root),  postorder(root)),
     ]
-    choice = rng.choice(traversal_pairs)
+    if not hasattr(q_two_traversals_to_bst, '_pair_queue') or not q_two_traversals_to_bst._pair_queue:
+        q_two_traversals_to_bst._pair_queue = list(range(len(traversal_pairs)))
+        rng.shuffle(q_two_traversals_to_bst._pair_queue)
+    choice = traversal_pairs[q_two_traversals_to_bst._pair_queue.pop()]
     name1, name2, t1, t2 = choice
 
     print("\n" + "=" * 60)
