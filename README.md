@@ -1,6 +1,6 @@
 # DSA Practice Generators
 
-Interactive, terminal-based quiz generators for CSE310 Midterm 2. Each script generates a **random question**, waits for you to think, then reveals the full answer with step-by-step explanations and ASCII tree diagrams. Every run produces fresh questions — no memorizing the same examples.
+Interactive, terminal-based quiz generators for theoretical exam of different Data Structures. Each script generates a **random question**, waits for you to think, then reveals the full answer with step-by-step explanations and ASCII tree diagrams. Every run produces fresh questions — no memorizing the same examples.
 
 ---
 
