@@ -291,7 +291,19 @@ def random_invalid_bst(rng, n):
 
 
 def random_unbalanced_bst(rng, n):
-    """Build a BST guaranteed to be unbalanced by inserting in sorted order."""
+    """Generate a random BST that is guaranteed to be unbalanced."""
+    # Try random insertion orders — many naturally produce unbalanced trees
+    for _ in range(50):
+        values = rng.sample(range(1, 100), n)
+        insert_order = list(values)
+        rng.shuffle(insert_order)
+        root = None
+        for v in insert_order:
+            root = insert_bst(root, v)
+        if not is_balanced(root):
+            return root, sorted(values)
+
+    # Fallback: insert in sorted order (guaranteed unbalanced for n >= 3)
     values = sorted(rng.sample(range(1, 100), n))
     root = None
     for v in values:
